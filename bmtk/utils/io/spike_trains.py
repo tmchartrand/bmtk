@@ -305,7 +305,7 @@ class SpikesInputH5(SpikesInput):
 
 class SpikesInputCSV(SpikesInput):
     def __init__(self, name, module, input_type, params):
-        self._spikes_df = pd.read_csv(params['input_file'], index_col='gid', sep=' ')
+        self._spikes_df = pd.read_csv(params['input_file'], index_col='gid', sep=' ', dtype={'gid':int, 'spike-times':str})
 
     def get_spikes(self, gid):
         spike_times_str = self._spikes_df.iloc[gid]['spike-times']

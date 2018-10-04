@@ -149,7 +149,7 @@ class SpikesFileH5(SpikesFileAdaptor):
 class SpikesFileCSV(SpikesFileAdaptor):
     def __init__(self, filename, **params):
         super(SpikesFileCSV, self).__init__(filename)
-        self._spikes_df = pd.read_csv(self._filename, names=['timestamps', 'gids'], sep=' ')
+        self._spikes_df = pd.read_csv(self._filename, names=['timestamps', 'gids'], sep=' ', dtype={'gid':int, 'spike-times':str})
 
     @property
     def gids(self):
