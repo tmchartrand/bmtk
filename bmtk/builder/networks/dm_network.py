@@ -191,7 +191,7 @@ class DenseNetwork(Network):
             param_names = param.names
             edge_table['params_dtypes'].update(param.dtypes)
             if isinstance(param_names, list) or isinstance(param_names, tuple):
-                tmp_tables = [self.PropertyTable(nsyns) for _ in range(len(param_names))]
+                tmp_tables = [self.PropertyTable(nsyns, dtype=param.get_prop_dtype(name)) for name in param_names]
                 for source in connection_map.source_nodes:
                     src_node_id = source.node_id
                     for target in connection_map.target_nodes:
@@ -206,7 +206,7 @@ class DenseNetwork(Network):
                     edge_table['params'][name] = tmp_tables[i]
 
             else:
-                pt = self.PropertyTable(np.sum(nsyns))
+                pt = self.PropertyTable(np.sum(nsyns), dtype=param.get_prop_dtype(param_names))
                 for source in connection_map.source_nodes:
                     src_node_id = source.node_id
                     for target in connection_map.target_nodes:
@@ -459,8 +459,8 @@ class DenseNetwork(Network):
 
     class PropertyTable(object):
         # TODO: add support for strings
-        def __init__(self, nvalues):
-            self._prop_array = np.zeros(nvalues)
+        def __init__(self, nvalues, dtype='float'):
+            self._prop_array = np.zeros(nvalues, dtype=dtype)
             # self._prop_table = np.zeros((nvalues, 1))  # TODO: set dtype
             self._index = np.zeros((nvalues, 2), dtype=np.uint32)
             self._itr_index = 0
