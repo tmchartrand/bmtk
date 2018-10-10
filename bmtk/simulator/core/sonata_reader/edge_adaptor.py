@@ -41,7 +41,17 @@ class SonataBaseEdge(object):
 
     @property
     def target_distance(self):
-        return self._edge['distance_range']
+        if 'distance_range' in self._edge:
+            dist_range = self._edge['distance_range']
+        elif 'distance_range_min' in self._edge and 'distance_range_max' in self._edge:
+            try:
+                dist_min = self._edge['distance_range_min']
+                dist_max = self._edge['distance_range_max']
+                dist_range = [float(dist_min), float(dist_max)]
+            except Exception:
+                self._prop_adaptor._network.io.log_warning('Unable to parse composite distance_range: min={}, max={}'.format(dist_min, dist_max))
+                dist_range = None
+        return dist_range
 
     @property
     def edge_type_id(self):
@@ -123,6 +133,15 @@ class EdgeAdaptor(object):
                         except Exception as e:
                             network.io.log_warning('Unable to parse distance_range {}'.format(dist_range))
                             edge_type['distance_range'] = None
+                            
+            elif 'distance_range_min' in edge_type and 'distance_range_max' in edge_type:
+                try:
+                    dist_min = edge_type['distance_range_min']
+                    dist_max = edge_type['distance_range_max']
+                    edge_type['distance_range'] = [float(dist_min), float(dist_max)]
+                except Exception:
+                    network.io.log_warning('Unable to parse composite distance_range: min={}, max={}'.format(dist_min, dist_max))
+                    edge_type['distance_range'] = None
 
     @classmethod
     def create_adaptor(cls, edge_group, network):
