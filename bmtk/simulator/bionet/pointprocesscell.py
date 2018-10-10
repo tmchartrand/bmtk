@@ -50,9 +50,7 @@ class PointProcessCell(Cell):
         delay = edge_prop.delay
 
         syn_weight = edge_prop.syn_weight(src_node, self._node)
-        if not edge_prop.preselected_targets:
-            # TODO: this is not very robust, need some other way
-            syn_weight *= syn_params['sign'] * nsyns
+        syn_weight *= syn_params.get('sign', 1) * nsyns
 
         if stim is not None:
             src_gid = -1
