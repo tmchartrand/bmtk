@@ -52,12 +52,14 @@ def sort_config_keys(ckey):
     exit()
 '''
 
-def get_network_block(circuit_config, network_dir):
+def get_network_block(network_dir=None, files=None):
+    assert(network_dir is not None or files is not None)
     net_nodes = {}
     net_edges = {}
-    for f in os.listdir(network_dir):
-        if not os.path.isfile(os.path.join(network_dir, f)) or f.startswith('.'):
-            continue
+    net_config = {'nodes':[], 'edges':[]} #Use DefaultDict
+    if files is None:
+        files = [f for f in os.listdir(network_dir) if os.path.isfile(os.path.join(network_dir, f)) and not f.startswith('.')]
+    for f in files:
 
         if '_nodes' in f:
             net_name = f[:f.find('_nodes')]
@@ -94,10 +96,11 @@ def get_network_block(circuit_config, network_dir):
             print('Unknown file {}. Will have to enter by hand'.format(f))
 
     for _, sect in net_nodes.items():
-        circuit_config['networks']['nodes'].append(sect)
+        net_config['nodes'].append(sect)
 
     for _, sect in net_edges.items():
-        circuit_config['networks']['edges'].append(sect)
+        net_config['edges'].append(sect)
+    return net_config
 
 
 def build_components(circuit_config, components_path, scripts_path, with_examples):
@@ -132,7 +135,7 @@ def build_circuit_env(base_dir, network_dir, components_dir, simulator, with_exa
     else:
         # if network_dir exists outside of the base_dir just reference the absolute path
         network_path = os.path.abspath(network_dir)
-
+        
     if not os.path.exists(network_path):
         os.makedirs(network_path)
     if network_path.startswith(os.path.abspath(base_dir)):
@@ -144,7 +147,7 @@ def build_circuit_env(base_dir, network_dir, components_dir, simulator, with_exa
     build_components(circuit_config, os.path.join(base_dir, components_dir), simulator_path, with_examples)
 
     # Parse the network directory
-    get_network_block(circuit_config, network_dir)
+    circuit_config['networks'] = get_network_block(network_dir)
 
     return circuit_config
 
@@ -162,6 +165,14 @@ def build_simulation_env(base_dir, target_simulator, tstop, dt, reports):
 
     return simulation_config
 
+def update_config(config_file, **props):
+    with open(config_file, 'r') as infile:
+        config_json = json.load(infile)
+    config_json.update(**props)
+    ordered_dict = OrderedDict(sorted(config_json.items(),
+                                        key=lambda s: config_order.index(s[0]) if s[0] in config_order else 100))
+    with open(config_file, 'w') as outfile:
+        json.dump(ordered_dict, outfile, indent=2)
 
 def copy_config(base_dir, json_dict, config_file_name):
     with open(os.path.join(base_dir, config_file_name), 'w') as outfile:
