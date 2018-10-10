@@ -129,15 +129,15 @@ def build_circuit_env(base_dir, network_dir, components_dir, simulator, with_exa
     if os.path.isabs(network_dir):
         # In case network_dir is an absolute path
         network_path = network_dir
-    elif os.path.abspath(network_dir).startswith(os.path.abspath(base_dir)):
-        # If network_dir is in a subdir of base_dir then NETWORK_DIR=$BASE_DIR/path/to/network
-        network_path = os.path.abspath(network_dir).replace(os.path.abspath(base_dir), '$BASE_DIR')
     else:
         # if network_dir exists outside of the base_dir just reference the absolute path
         network_path = os.path.abspath(network_dir)
 
     if not os.path.exists(network_path):
         os.makedirs(network_path)
+    if network_path.startswith(os.path.abspath(base_dir)):
+        # If network_dir is in a subdir of base_dir then NETWORK_DIR=$BASE_DIR/path/to/network
+        network_path = network_path.replace(os.path.abspath(base_dir), '$BASE_DIR')
     circuit_config['manifest']['$NETWORK_DIR'] = network_path
 
     # Initialize the components directories
