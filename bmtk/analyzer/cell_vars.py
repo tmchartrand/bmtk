@@ -13,10 +13,12 @@ missing_units = {
 }
 
 
-def _get_cell_report(config_file, report_name):
+def get_cell_report(config_file, report_name=None):
     cfg = load_config(config_file)
     if report_name is not None:
-        return cfg.reports[report_name], report_name
+        report = cfg.reports.get(report_name)
+        if report is None:
+            raise Exception('Could not find the report {} in {}'.format(report_name, config_file))
 
     else:
         cell_var_reports = [(r_name, r_dict) for r_name, r_dict in cfg.reports.items()
@@ -30,13 +32,13 @@ def _get_cell_report(config_file, report_name):
         else:
             report_name = cell_var_reports[0][0]
             report = cell_var_reports[0][1]
-            report_fname = report['file_name'] if 'file_name' in report else '{}.h5'.format(report_name)
-            return report_name, os.path.join(cfg.output_dir, report_fname)
+    report_fname = report['file_name'] if 'file_name' in report else '{}.h5'.format(report_name)
+    return os.path.join(cfg.output_dir, report_fname)
 
 
 def plot_report(config_file=None, report_file=None, report_name=None, variables=None, gids=None):
     if report_file is None:
-        report_name, report_file = _get_cell_report(config_file, report_name)
+        report_file = get_cell_report(config_file, report_name)
 
     var_report = CellVarsFile(report_file)
     variables = listify(variables) if variables is not None else var_report.variables
