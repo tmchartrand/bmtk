@@ -34,7 +34,7 @@ def _get_cell_report(config_file, report_name):
             return report_name, os.path.join(cfg.output_dir, report_fname)
 
 
-def plot_report(config_file=None, report_file=None, report_name=None, variables=None, gids=None):
+def plot_report(config_file=None, report_file=None, report_name=None, variables=None, gids=None, show=True):
     if report_file is None:
         report_name, report_file = _get_cell_report(config_file, report_name)
 
@@ -68,28 +68,12 @@ def plot_report(config_file=None, report_file=None, report_name=None, variables=
         # For plotting a single variable
         plt.figure()
         for gid in gids:
-            plt.plot(time_steps, var_report.data(gid=0, var_name=variables[0]), label='gid {}'.format(gid))
+            plt.plot(time_steps, var_report.data(gid=gid, var_name=variables[0]), label='gid {}'.format(gid))
         plt.ylabel('{} {}'.format(variables[0], __units_str(variables[0])))
         plt.xlabel('time (ms)')
 
     else:
         return
-
-    plt.show()
-
-    #for gid in gids:
-    #    plt.plot(times, var_report.data(gid=0, var_name='v'), label='gid {}'.format(gid))
-
-
-    '''
-
-
-
-    plt.ylabel('{} {}'.format('v', units_str))
-    plt.xlabel('time (ms)')
-    plt.legend()
-    plt.show()
-    '''
-
-
-
+    if show:
+        plt.show()
+    return
