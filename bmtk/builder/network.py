@@ -324,8 +324,9 @@ class Network (object):
             return os.path.join(path_dir, filename)
 
     def save(self, output_dir='.'):
-        self.save_nodes(output_dir=output_dir)
-        self.save_edges(output_dir=output_dir)
+        nodefiles = self.save_nodes(output_dir=output_dir)
+        edgefiles = self.save_edges(output_dir=output_dir)
+        return nodefiles + edgefiles
 
     def save_nodes(self, nodes_file_name=None, node_types_file_name=None, output_dir='.', force_overwrite=True):
         nodes_file = self.__get_path(nodes_file_name, output_dir, 'nodes.h5')
@@ -344,6 +345,8 @@ class Network (object):
 
         self._save_nodes(nodes_file)
         self._save_node_types(node_types_file)
+        outfiles = [os.path.basename(nodes_file), os.path.basename(node_types_file)]
+        return outfiles
 
     def _save_nodes(self, nodes_file_name):
         raise NotImplementedError
@@ -364,7 +367,7 @@ class Network (object):
         # Make sure edges exists and are built
         if len(self._connection_maps) == 0:
             print("Warning: no edges have been made for this network, skipping saving.")
-            return
+            return []
 
         if self._edges_built is False:
             if force_build:
@@ -372,7 +375,7 @@ class Network (object):
                 self.__build_edges()
             else:
                 print("Warning: Edges are not built. Either call build() or use force_build parameter. Skip saving.")
-                return
+                return []
 
         network_params = [(s, t, s+'_'+t+'_edges.h5', s+'_'+t+'_edge_types.csv') for s, t in list(self._network_conns)]
         if src_network is not None:
@@ -383,20 +386,24 @@ class Network (object):
 
         if len(network_params) == 0:
             print("Warning: couldn't find connections. Skip saving.")
-            return
-
+            return []
+        # TC: Do we want to silently eliminate connection sets here?
         if (edges_file_name or edge_types_file_name) is not None:
             network_params = [(network_params[0][0], network_params[0][1], edges_file_name, edge_types_file_name)]
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
+        outfiles = []
         for p in network_params:
             if p[3] is not None:
+                outfiles.append(p[3])
                 self._save_edge_types(os.path.join(output_dir, p[3]), p[0], p[1])
 
             if p[2] is not None:
+                outfiles.append(p[2])
                 self._save_edges(os.path.join(output_dir, p[2]), p[0], p[1], name)
+        return outfiles
 
     def _save_edge_types(self, edge_types_file_name, src_network, trg_network):
 
