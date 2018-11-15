@@ -51,34 +51,37 @@ def sort_config_keys(ckey):
     print(ckey)
     exit()
 '''
-
+# TC: replacing with $NETWORK_DIR should be separate
 def get_network_block(network_dir=None, files=None):
     assert(network_dir is not None or files is not None)
     net_nodes = {}
     net_edges = {}
     net_config = {'nodes':[], 'edges':[]} #Use DefaultDict
     if files is None:
-        files = [f for f in os.listdir(network_dir) if os.path.isfile(os.path.join(network_dir, f)) and not f.startswith('.')]
-    for f in files:
-
+        files = [os.path.join(network_dir, f) for f in os.listdir(network_dir) if not f.startswith('.')]
+        files = [f for f in files if os.path.isfile(f)]
+    for filepath in files:
+        f = os.path.basename(filepath)
+        if network_dir:
+            filepath = os.path.join('$NETWORK_DIR', f)
         if '_nodes' in f:
             net_name = f[:f.find('_nodes')]
             nodes_dict = net_nodes.get(net_name, {})
-            nodes_dict['nodes_file'] = os.path.join('$NETWORK_DIR', f)
+            nodes_dict['nodes_file'] = filepath
             net_nodes[net_name] = nodes_dict
 
         elif '_node_types' in f:
             net_name = f[:f.find('_node_types')]
             nodes_dict = net_nodes.get(net_name, {})
-            nodes_dict['node_types_file'] = os.path.join('$NETWORK_DIR', f)
+            nodes_dict['node_types_file'] = filepath
             net_nodes[net_name] = nodes_dict
 
         elif '_edges' in f:
             net_name = f[:f.find('_edges')]
             edges_dict = net_edges.get(net_name, {})
-            edges_dict['edges_file'] = os.path.join('$NETWORK_DIR', f)
+            edges_dict['edges_file'] = filepath
             try:
-                edges_h5 = h5py.File(os.path.join(network_dir, f), 'r')
+                edges_h5 = h5py.File(filepath, 'r')
                 edges_dict['target'] = edges_h5['edges']['target_gid'].attrs['network']
                 edges_dict['source'] = edges_h5['edges']['source_gid'].attrs['network']
             except Exception as e:
@@ -89,7 +92,7 @@ def get_network_block(network_dir=None, files=None):
         elif '_edge_types' in f:
             net_name = f[:f.find('_edge_types')]
             edges_dict = net_edges.get(net_name, {})
-            edges_dict['edge_types_file'] = os.path.join('$NETWORK_DIR', f)
+            edges_dict['edge_types_file'] = filepath
             net_edges[net_name] = edges_dict
 
         else:
