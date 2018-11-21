@@ -101,9 +101,7 @@ class CellVarsFile(object):
         bounds = self._gid2data_table[gid]
         return self._mapping['element_pos'][bounds[0]:bounds[1]]
 
-    def data(self, gid, var_name=VAR_UNKNOWN, time_window=None, compartments='origin'):
-        if np.isscalar(gid):
-            gid = [gid]
+    def data(self, gid, var_name=VAR_UNKNOWN,time_window=None, compartments='origin'):
         if var_name not in self.variables:
             raise Exception('Unknown variable {}'.format(var_name))
 
@@ -118,9 +116,9 @@ class CellVarsFile(object):
             time_slice = slice(window_beg, window_end)
 
         multi_compartments = True
-        if compartments == 'origin' or (len(gid)==1 and self.n_compartments(gid)==1):
+        if compartments == 'origin' or self.n_compartments(gid) == 1:
             # Return the first (and possibly only) compartment for said gid
-            gid_slice = [self._gid2data_table[gid0][0] for gid0 in gid]
+            gid_slice = self._gid2data_table[gid][0]
             multi_compartments = False
         elif compartments == 'all':
             # Return all compartments
