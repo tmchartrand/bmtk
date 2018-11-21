@@ -173,7 +173,7 @@ def plot_spikes(cells_file, cell_models_file, spikes_file, population=None, grou
 
         n_colors = nodes_df[group_key].nunique()
         color_norm = colors.Normalize(vmin=0, vmax=(n_colors-1))
-        scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='hsv')
+        scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='brg')
         color_map = [scalar_map.to_rgba(i) for i in range(0, n_colors)]
     else:
         groupings = [(None, nodes_df)]
@@ -243,7 +243,7 @@ def plot_ratess(cells_file, cell_models_file, spikes_file, group_key='pop_name',
     groupings = nodes_df.groupby(group_key)
     n_colors = nodes_df[group_key].nunique()
     color_norm = colors.Normalize(vmin=0, vmax=(n_colors - 1))
-    scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='hsv')
+    scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='brg')
     color_map = [scalar_map.to_rgba(i) for i in range(0, n_colors)]
 
 
@@ -323,7 +323,7 @@ def plot_rates(cells_file, cell_models_file, spikes_file, group_key=None, exclud
 
         n_colors = len(group_order)
         color_norm = colors.Normalize(vmin=0, vmax=(n_colors-1))
-        scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='hsv')
+        scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='brg')
         color_map = [scalar_map.to_rgba(i) for i in range(0, n_colors)]
         ordered_groupings = [(group_order[name], c, name, df) for c, (name, df) in zip(color_map, groupings)]
 
