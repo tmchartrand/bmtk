@@ -151,6 +151,8 @@ def __build_manifest(conf):
 
             # If value no longer has variables, and key-value pair to resolved_manifest and remove from unresolved-keys
             if value.find('$') < 0:
+                # Convert relative paths to absolute
+                value = os.path.normpath(os.path.join(conf['config_dir'], value))
                 resolved_manifest[key] = value
                 resolved_keys.add(key)
 
