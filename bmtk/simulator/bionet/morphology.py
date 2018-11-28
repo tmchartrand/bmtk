@@ -22,6 +22,7 @@
 #
 import numpy as np
 from neuron import h
+import six
 
 
 pc = h.ParallelContext()  # object to access MPI methods
@@ -36,6 +37,7 @@ class Morphology(object):
                              'axon': 2, 'axonal': 2,  # into a consistent swc notation
                              'dend': 3, 'basal': 3,
                              'apic': 4, 'apical': 4}
+        self.sec_abbrevs = {'s':1, 'x':2, 'd':3, 'b':3, 'a':4}
         self.nseg = self.get_nseg()
         self._segments = {}
 
@@ -223,8 +225,11 @@ class Morphology(object):
         ix_drange = np.where(frac_overlap > 0)  # find indexes with non-zero overlap
         ix_labels = np.array([], dtype=np.int)
 
-        for tar_sec_label in target_sections:  # find indexes within sec_labels
-            sec_type = self.sec_type_swc[tar_sec_label]  # get swc code for the section label
+        if isinstance(target_sections, six.string_types):
+            sec_types = [self.sec_abbrevs[char] for char in target_sections]
+        else:
+            sec_types = [self.sec_type_swc[sec] for sec in target_sections] # get swc code for the section label
+        for sec_type in sec_types:  # find indexes within sec_labels
             ix_label = np.where(seg_type == sec_type)
             ix_labels = np.append(ix_labels, ix_label)  # target segment indexes
 

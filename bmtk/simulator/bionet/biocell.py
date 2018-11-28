@@ -183,6 +183,10 @@ class BioCell(Cell):
 
     def _set_connections(self, edge_prop, src_node, syn_weight, stim=None):
         tar_seg_ix, tar_seg_prob = self._morph.get_target_segments(edge_prop)
+        if len(tar_seg_prob)==0:
+            Warning("Synapse creation failed: no segments within distance_range.")
+            return 0
+
         src_gid = src_node.node_id
         nsyns = edge_prop.nsyns
 
