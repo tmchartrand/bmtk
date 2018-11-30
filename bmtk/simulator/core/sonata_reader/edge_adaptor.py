@@ -51,6 +51,9 @@ class SonataBaseEdge(object):
             except Exception:
                 self._prop_adaptor._network.io.log_warning('Unable to parse composite distance_range: min={}, max={}'.format(dist_min, dist_max))
                 dist_range = None
+        else:
+            self._prop_adaptor._network.io.log_warning('Connection distance_range is incomplete or missing.')
+            dist_range = None
         return dist_range
 
     @property
@@ -117,8 +120,10 @@ class EdgeAdaptor(object):
                     try:
                         edge_type['target_sections'] = ast.literal_eval(trg_sec)
                     except Exception as exc:
-                        network.io.log_warning('Unable to split target_sections list {}'.format(trg_sec))
-                        edge_type['target_sections'] = None
+                        # check if using abbrevs
+                        if not set(trg_sec) <= set('sxdba'):
+                            network.io.log_warning('Unable to split target_sections list {}'.format(trg_sec))
+                            edge_type['target_sections'] = None
 
             # Split target distances
             if 'distance_range' in edge_type:
