@@ -110,6 +110,22 @@ def lambda_iterator(source_nodes, target_nodes, lambda_val):
     for source, target in itertools.product(source_nodes, target_nodes):
         yield (source.node_id, target.node_id, lambda_val())
 
+def paired_iterator(source_nodes, target_nodes, connector):
+    assert(len(source_nodes) == len(target_nodes))
+    for source, target in zip(source_nodes, target_nodes):
+        yield (source.node_id, target.node_id, connector(source, target))
+
+def paired_lambda_iterator(source_nodes, target_nodes, lambda_val):
+    assert(len(source_nodes) == len(target_nodes))
+    for source, target in zip(source_nodes, target_nodes):
+        yield (source.node_id, target.node_id, lambda_val())        
+
+def paired_list_iterator(source_nodes, target_nodes, vals):
+    assert(len(vals) == len(source_nodes) and len(source_nodes) == len(target_nodes))
+    source_ids = [s.node_id for s in list(source_nodes)]
+    target_ids = [t.node_id for t in list(target_nodes)]
+    return zip(source_ids, target_ids, vals)
+
 
 ITERATOR_CACHE = IteratorCache()
 register('one_to_one', functools.partial, one_to_one_iterator)
@@ -119,6 +135,10 @@ register('one_to_all', functools.partial, one_to_all_iterator)
 register('one_to_one', list, one_to_one_list_iterator)
 register('one_to_all', list, one_to_all_list_iterator)
 register('all_to_one', list, all_to_one_list_iterator)
+
+register('paired', functools.partial, paired_iterator)
+register('paired', list, paired_list_iterator)
+register('paired', types.FunctionType, paired_lambda_iterator)
 
 
 register('one_to_one', types.FunctionType, lambda_iterator)
