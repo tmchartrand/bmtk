@@ -206,7 +206,13 @@ class SpikeTrainWriter(object):
 class PoissonSpikesGenerator(object):
     def __init__(self, gids, firing_rate, tstart=0.0, tstop=1000.0):
         self._gids = gids
-        self._firing_rate = firing_rate / 1000.0
+        if np.isscalar(firing_rate):
+            self._firing_rate = np.full_like(gids, firing_rate / 1000.0)
+        elif len(gids)==len(firing_rate):
+            self._firing_rate = np.array(firing_rate) / 1000.0
+        else:
+            Exception("Firing rate and gid array dimensions don't match.")
+
         self._tstart = tstart
         self._tstop = tstop
 
@@ -215,10 +221,10 @@ class PoissonSpikesGenerator(object):
             gid_list = []
             times_list = []
             if sort_order == 'gid':
-                for gid in self._gids:
+                for i, gid in enumerate(self._gids):
                     c_time = self._tstart
                     while c_time < self._tstop:
-                        interval = -np.log(1.0 - np.random.uniform()) / self._firing_rate
+                        interval = -np.log(1.0 - np.random.uniform()) / self._firing_rate[i]
                         c_time += interval
                         gid_list.append(gid)
                         times_list.append(c_time)
