@@ -207,7 +207,7 @@ class PoissonSpikesGenerator(object):
     def __init__(self, gids, firing_rate, tstart=0.0, tstop=1000.0):
         self._gids = gids
         if np.isscalar(firing_rate):
-            self._firing_rate = np.full_like(gids, firing_rate / 1000.0)
+            self._firing_rate = np.full_like(gids, firing_rate / 1000.0, dtype=float)
         elif len(gids)==len(firing_rate):
             self._firing_rate = np.array(firing_rate) / 1000.0
         else:
