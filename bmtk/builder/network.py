@@ -326,7 +326,7 @@ class Network (object):
     def save(self, output_dir='.'):
         nodefiles = self.save_nodes(output_dir=output_dir)
         edgefiles = self.save_edges(output_dir=output_dir)
-        return nodefiles + edgefiles
+        return nodefiles, edgefiles
 
     def save_nodes(self, nodes_file_name=None, node_types_file_name=None, output_dir='.', force_overwrite=True):
         nodes_file = self.__get_path(nodes_file_name, output_dir, 'nodes.h5')
@@ -345,7 +345,7 @@ class Network (object):
 
         self._save_nodes(nodes_file)
         self._save_node_types(node_types_file)
-        outfiles = [os.path.basename(nodes_file), os.path.basename(node_types_file)]
+        outfiles = {'nodes_file': nodes_file, 'node_types_file': node_types_file}
         return outfiles
 
     def _save_nodes(self, nodes_file_name):
@@ -394,16 +394,16 @@ class Network (object):
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        outfiles = []
         for p in network_params:
             if p[3] is not None:
-                outfiles.append(p[3])
                 self._save_edge_types(os.path.join(output_dir, p[3]), p[0], p[1])
 
             if p[2] is not None:
-                outfiles.append(p[2])
                 self._save_edges(os.path.join(output_dir, p[2]), p[0], p[1], name)
-        return outfiles
+
+        edge_dicts = [{'edges_file':os.path.join(output_dir, p[2]), 'edge_types_file':os.path.join(output_dir, p[3])} 
+            for p in network_params]
+        return edge_dicts
 
     def _save_edge_types(self, edge_types_file_name, src_network, trg_network):
 
