@@ -23,6 +23,7 @@
 import os
 import h5py
 from neuron import h
+from collections import defaultdict
 
 from bmtk.simulator.bionet.modules.sim_module import SimulatorMod
 from bmtk.simulator.bionet.io_tools import io
@@ -92,7 +93,8 @@ class MembraneReport(SimulatorMod):
         self._gid_list = []  # list of all gids that will have their variables saved
         self._data_block = {}  # table of variable data indexed by [gid][variable]
         self._block_step = 0  # time step within a given block
-
+        self._seg_obj_dict = defaultdict(list)
+        
     def _get_gids(self, sim):
         # get list of gids to save. Will only work for biophysical cells saved on the current MPI rank
         selected_gids = set(sim.net.get_node_set(self._all_gids).gids())
@@ -114,11 +116,22 @@ class MembraneReport(SimulatorMod):
             seg_list = []
             cell = sim.net.get_cell_gid(gid)
             cell.store_segments()
-            for sec_id, sec in enumerate(cell.get_sections()):
+            
+            h.distance(sec= cell.hobj.soma[0])
+            for sec_id, sec in enumerate(cell.get_sections()):     
+                sec_name =  sec.name().split(".")[1][:4]
+                
                 for seg in sec:
                     # TODO: Make sure the seg has the recorded variable(s)
-                    sec_list.append(sec_id)
-                    seg_list.append(seg.x)
+                   
+                    if sec_name in self._sections:
+                        sec_list.append(sec_id)
+                        seg_list.append(seg.x)
+                        self._seg_obj_dict[gid].append(seg)
+                    elif self._sections == 'all':
+                        sec_list.append(sec_id)
+                        seg_list.append(seg.x)
+                        self._seg_obj_dict[gid].append(seg)
 
             self._var_recorder.add_cell(gid, sec_list, seg_list)
 
@@ -129,11 +142,11 @@ class MembraneReport(SimulatorMod):
         for gid in self._local_gids:
             cell = sim.net.get_cell_gid(gid)
             for var_name in self._variables:
-                seg_vals = [getattr(seg, var_name) for seg in cell.get_segments()]
+                seg_vals = [getattr(seg, var_name) for seg in self._seg_obj_dict[gid]]
                 self._var_recorder.record_cell(gid, var_name, seg_vals, tstep)
 
             for var_name, fnc in self._transforms.items():
-                seg_vals = [fnc(getattr(seg, var_name)) for seg in cell.get_segments()]
+                seg_vals = [fnc(getattr(seg, var_name)) for seg in self._seg_obj_dict[gid]]
                 self._var_recorder.record_cell(gid, var_name, seg_vals, tstep)
 
         self._block_step += 1
@@ -149,6 +162,7 @@ class MembraneReport(SimulatorMod):
 
         pc.barrier()
         self._var_recorder.merge()
+
 
 
 class SomaReport(MembraneReport):
