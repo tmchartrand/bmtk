@@ -240,8 +240,10 @@ class PoissonSpikesGenerator(object):
                     while c_time < self._tstop:
                         interval = -np.log(1.0 - np.random.uniform()) / self._firing_rate[i]
                         c_time += interval
-                        gid_list.append(gid)
-                        times_list.append(c_time)
+                        
+                        if c_time < self._tstop:
+                            times_list.append(c_time)
+                            gid_list.append(gid)
 
             with h5py.File(file_name, 'w') as h5:
                 h5.create_dataset('/spikes/gids', data=gid_list, dtype=np.uint)
