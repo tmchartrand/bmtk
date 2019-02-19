@@ -31,6 +31,7 @@ from bmtk.simulator.core.node_sets import NodeSet
 import bmtk.simulator.utils.simulation_reports as reports
 import bmtk.simulator.utils.simulation_inputs as inputs
 from bmtk.utils.io import spike_trains
+from bmtk.utils.io.iclamp import IClampInput
 
 
 pc = h.ParallelContext()    # object to access MPI methods
@@ -292,6 +293,11 @@ class BioSimulator(Simulator):
 
             elif sim_input.module == 'IClamp':
                 # TODO: Parse from csv file
+                input_file = sim_input.params.get('input_file')
+                if input_file:
+                    iclamp_input = iclamp.IClampInput.from_csv(input_file)
+                    sim._iclamps.append(iclamp_input.attach_current())
+                else:
                 amplitude = sim_input.params['amp']
                 delay = sim_input.params['delay']
                 duration = sim_input.params['duration']
