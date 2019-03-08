@@ -135,6 +135,7 @@ class Morphology(object):
         seg_x = []
         seg_dist = []
         seg_length = []
+        seg_diam = []
 
         h.distance(sec=self.hobj.soma[0])   # measure distance relative to the soma
         
@@ -150,8 +151,10 @@ class Morphology(object):
                 seg_length.append(sec.L/sec.nseg)
                 seg_type.append(sec_type_swc)           # record section type in a list
                 seg_dist.append(h.distance(seg.x))  # distance to the center of the segment
+                seg_diam.append(seg.diam)
 
         self.seg_prop = {}
+        self.seg_prop['diam'] = np.array(seg_diam)
         self.seg_prop['type'] = np.array(seg_type)
         self.seg_prop['area'] = np.array(seg_area)
         self.seg_prop['x'] = np.array(seg_x)
