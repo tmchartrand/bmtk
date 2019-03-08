@@ -20,6 +20,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+import warnings
 import os
 import csv
 import h5py
@@ -163,7 +164,9 @@ def plot_spikes(cells_file, cell_models_file, spikes_file, population=None, grou
     spike_times = np.array(spikes_h5['/spikes/timestamps'], dtype=np.float)
     # spike_times, spike_gids = np.loadtxt(spikes_file, dtype='float32,int', unpack=True)
     # spike_gids, spike_times = np.loadtxt(spikes_file, dtype='int,float32', unpack=True)
-
+    if len(spike_times)==0:
+        warnings.warn("No spikes to plot")
+        return
     spike_times = spike_times * 1.0e-3
 
     if group_key is not None:
@@ -330,9 +333,9 @@ def plot_rates(cells_file, cell_models_file, spikes_file, group_key=None, exclud
     else:
         ordered_groupings = [(0, 'blue', None, nodes_df)]
 
-    keys = ['' for _ in xrange(len(group_order))]
-    means = [0 for _ in xrange(len(group_order))]
-    stds = [0 for _ in xrange(len(group_order))]
+    keys = ['' for _ in xrange(len(ordered_groupings))]
+    means = [0 for _ in xrange(len(ordered_groupings))]
+    stds = [0 for _ in xrange(len(ordered_groupings))]
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
     for indx, color, group_name, group_df in ordered_groupings:
@@ -354,7 +357,7 @@ def plot_rates(cells_file, cell_models_file, spikes_file, group_key=None, exclud
 
     plt.figure()
     plt.errorbar(xrange(len(means)), means, stds, linestyle='None', marker='o')
-    plt.xlim(-0.5, len(color_map)-0.5) # len(color_map) == last_index + 1
+    plt.xlim(-0.5, len(means)+0.5) 
     plt.ylim(0, 50.0)# max_rate*1.3)
     plt.xticks(xrange(len(means)), keys)
     if title is not None:
