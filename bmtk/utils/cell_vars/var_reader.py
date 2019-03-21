@@ -128,7 +128,7 @@ class CellVarsFile(object):
             compartment_list = list(compartments) if isinstance(compartments, (long, int)) else compartments
             begin = self._gid2data_table[gid][0]
             end = self._gid2data_table[gid][1]
-            gid_slice = [i for i in range(begin, end) if self._mapping[i] in compartment_list]
+            gid_slice = [i for i in range(begin, end) if self._mapping['element_id'][i] in compartment_list]
 
         data = np.array(self._var_data[var_name][time_slice, gid_slice])
-        return data.T if multi_compartments else data
+        return data if multi_compartments else data

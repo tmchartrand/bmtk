@@ -46,7 +46,7 @@ class BioCell(Cell):
         # Determine number of segments and store a list of all sections.
         self._nseg = 0
         self.set_nseg(bionetwork.dL)
-        self._secs = []
+        self._secs_by_seg = []
         self._secs_by_id = []
         self.set_sec_array()
 
@@ -119,18 +119,17 @@ class BioCell(Cell):
         self._morph = morphology_obj
 
     def get_sections(self):
-        #return self._secs_by_id
-        return self._secs
+        return self._secs_by_id
 
     def get_sections_id(self):
         return self._secs_by_id
 
     def get_section(self, sec_id):
-        return self._secs[sec_id]
+        return self._secs_by_id[sec_id]
 
     def store_segments(self):
         self._segments = []
-        for sec in self._secs:
+        for sec in self.get_sections():
             for seg in sec:
                 self._segments.append(seg)
 
@@ -146,7 +145,7 @@ class BioCell(Cell):
             for _ in sec:
                 secs.append(sec)  # section to which segments belongs
 
-        self._secs = np.array(secs)
+        self._secs_by_seg = np.array(secs)
 
     def set_syn_connection(self, edge_prop, src_node, stim=None):
         syn_weight = edge_prop.syn_weight(src_node=src_node, trg_node=self._node)
@@ -161,7 +160,6 @@ class BioCell(Cell):
         sec_x = edge_prop['sec_x']
         sec_id = edge_prop['sec_id']
         section = self._secs_by_id[sec_id]
-        # section = self._secs[sec_id]
         delay = edge_prop['delay']
         synapse_fnc = nrn.py_modules.synapse_model(edge_prop['model_template'])
         syn = synapse_fnc(edge_prop['dynamics_params'], sec_x, section)
@@ -192,7 +190,7 @@ class BioCell(Cell):
 
         # choose nsyn elements from seg_ix with probability proportional to segment area
         segs_ix = self.prng.choice(tar_seg_ix, nsyns, p=tar_seg_prob)
-        secs = self._secs[segs_ix]  # sections where synapases connect
+        secs = self._secs_by_seg[segs_ix]  # sections where synapases connect
         xs = self._morph.seg_prop['x'][segs_ix]  # distance along the section where synapse connects, i.e., seg_x
 
         # TODO: this should be done just once
