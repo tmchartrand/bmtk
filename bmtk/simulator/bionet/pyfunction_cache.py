@@ -101,8 +101,19 @@ class _PyFunctions(object):
         return self.__cell_processors[name]
 
     def add_cell_processor(self, name, func, overwrite=True):
-        if overwrite or name not in self.__syn_weights:
+        if overwrite or name not in self.__cell_processors:
             self.__cell_processors[name] = func
+
+    @property
+    def sim_modules(self):
+        return self.__sim_modules.keys()
+
+    def sim_module(self, name):
+        return self.__sim_modules[name]
+
+    def add_sim_module(self, name, func, overwrite=True):
+        if overwrite or name not in self.__sim_modules:
+            self.__sim_modules[name] = func
 
     def __repr__(self):
         rstr = '{}: {}\n'.format('cell_models', self.cell_models)
