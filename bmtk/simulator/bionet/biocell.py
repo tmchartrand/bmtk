@@ -247,7 +247,7 @@ class BioCell(Cell):
         self.im_ptr.ptr_update_callback(self.set_im_ptr)
         self.imVec = h.Vector(self._nseg)
 
-        # self.__set_extracell_mechanism()
+        self.__set_extracell_mechanism()
         #for sec in self.hobj.all:
         #    sec.insert('extracellular')
 
