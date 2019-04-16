@@ -46,7 +46,6 @@ pc = h.ParallelContext()
 MPI_RANK = int(pc.id())
 N_HOSTS = int(pc.nhost())
 
-
 def first_element(lst):
     return lst[0]
 
@@ -58,7 +57,7 @@ transforms_table = {
 
 class MembraneReport(SimulatorMod):
     def __init__(self, tmp_dir, file_name, variable_name, cells, sections='all',
-                 soma_distance = None, buffer_data=True, transform={}):
+                 buffer_data=True, transform={}):
         """Module used for saving NEURON cell properities at each given step of the simulation.
 
         :param tmp_dir:
@@ -96,8 +95,7 @@ class MembraneReport(SimulatorMod):
         self._data_block = {}  # table of variable data indexed by [gid][variable]
         self._block_step = 0  # time step within a given block
         self._seg_obj_dict = defaultdict(list)
-        self._soma_distance = soma_distance
-        self._dist_eps = float('Inf')
+        
     def _get_gids(self, sim):
         # get list of gids to save. Will only work for biophysical cells saved on the current MPI rank
         selected_gids = set(sim.net.get_node_set(self._all_gids).gids())
@@ -127,30 +125,12 @@ class MembraneReport(SimulatorMod):
                 for seg in sec:
                     # TODO: Make sure the seg has the recorded variable(s)
                    
-                    if sec_name in self._sections:
-                        if self._soma_distance:
-                            dist_seg = h.distance(seg.x,sec= sec)
-                            if abs(dist_seg - self._soma_distance) < self._dist_eps:
-                                self._dist_eps = abs(dist_seg - self._soma_distance)
-                                if len(sec_list) == 0:
-                                    sec_list.append(sec_id)
-                                    seg_list.append(seg.x)
-                                    self._seg_obj_dict[gid].append(seg)
-                                else:
-                                    sec_list[0] = sec_id
-                                    seg_list[0] = seg.x
-                                    self._seg_obj_dict[gid][0] = seg
-                        else:
-                            sec_list.append(sec_id)
-                            seg_list.append(seg.x)
-                            self._seg_obj_dict[gid].append(seg)
-                    elif self._sections == 'all':
+                    if self._sections == 'all' or sec_name in self._sections:
                         sec_list.append(sec_id)
                         seg_list.append(seg.x)
                         self._seg_obj_dict[gid].append(seg)
 
             self._var_recorder.add_cell(gid, sec_list, seg_list)
-            self._dist_eps = float('Inf')
         self._var_recorder.initialize(sim.n_steps, sim.nsteps_block)
 
     def step(self, sim, tstep):
@@ -158,11 +138,11 @@ class MembraneReport(SimulatorMod):
         for gid in self._local_gids:
             cell = sim.net.get_cell_gid(gid)
             for var_name in self._variables:
-                seg_vals = [getattr(seg, var_name) for seg in self._seg_obj_dict[gid]]
+                seg_vals = [getattr_hoc(seg, var_name) for seg in self._seg_obj_dict[gid]]
                 self._var_recorder.record_cell(gid, var_name, seg_vals, tstep)
 
             for var_name, fnc in self._transforms.items():
-                seg_vals = [fnc(getattr(seg, var_name)) for seg in self._seg_obj_dict[gid]]
+                seg_vals = [fnc(getattr_hoc(seg, var_name)) for seg in self._seg_obj_dict[gid]]
                 self._var_recorder.record_cell(gid, var_name, seg_vals, tstep)
 
         self._block_step += 1
@@ -179,12 +159,18 @@ class MembraneReport(SimulatorMod):
         pc.barrier()
         self._var_recorder.merge()
 
+nan = float('nan')
 
+def getattr_hoc(obj, attr):
+    if hasattr(obj, attr):
+        return getattr(obj, attr)
+    else:
+        return nan
 
 class SomaReport(MembraneReport):
     """Special case for when only needing to save the soma variable"""
     def __init__(self, tmp_dir, file_name, variable_name, cells, sections='soma', 
-                 buffer_data=True, transform={},soma_distance = None):
+                 buffer_data=True, transform={}):
         super(SomaReport, self).__init__(tmp_dir=tmp_dir, file_name=file_name, variable_name=variable_name, cells=cells,
                                          sections=sections, buffer_data=buffer_data, transform=transform)
 
@@ -201,11 +187,11 @@ class SomaReport(MembraneReport):
         for gid in self._local_gids:
             cell = sim.net.get_cell_gid(gid)
             for var_name in self._variables:
-                var_val = getattr(cell.hobj.soma[0](0.5), var_name)
+                var_val = getattr_hoc(cell.hobj.soma[0](0.5), var_name)
                 self._var_recorder.record_cell(gid, var_name, [var_val], tstep)
 
             for var_name, fnc in self._transforms.items():
-                var_val = getattr(cell.hobj.soma[0](0.5), var_name)
+                var_val = getattr_hoc(cell.hobj.soma[0](0.5), var_name)
                 new_val = fnc(var_val)
                 self._var_recorder.record_cell(gid, var_name, [new_val], tstep)
 
