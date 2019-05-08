@@ -338,18 +338,22 @@ def get_axon_direction(hobj):
         mid_point = int(n3d / 2)
         soma_mid = np.asarray([h.x3d(mid_point), h.y3d(mid_point), h.z3d(mid_point)])
 
-    for sec in hobj.all:
-        section_name = sec.name().split(".")[1][:4]
-        if section_name == 'axon':
+    axon_p3d_all = [] 
+    n_secs = 2
+    for i, sec in enumerate(hobj.axonal):
+        if i<n_secs:
             n3d = int(h.n3d())  # get number of n3d points in each section
             axon_p3d = np.zeros((n3d, 3))  # to hold locations of 3D morphology for the current section
             for i in range(n3d):
                 axon_p3d[i, 0] = h.x3d(i)
-                axon_p3d[i, 1] = h.y3d(i)  # shift coordinates such to place soma at the origin.
+                axon_p3d[i, 1] = h.y3d(i) 
                 axon_p3d[i, 2] = h.z3d(i)
-
+            axon_p3d_all.append(axon_p3d)
+            
+    axon_p3d_all = np.concatenate(axon_p3d_all)
     # Add soma coordinates to the list
-    p3d = np.concatenate(([soma_mid], axon_p3d), axis=0)
+    p3d = np.concatenate(([soma_mid], axon_p3d_all))
+    p3d = p3d - soma_mid  # set the origin at soma
 
     # Compute PCA
     pca = PCA(n_components=3)
@@ -362,12 +366,10 @@ def get_axon_direction(hobj):
     unit_v[2] = unit_v[2] / mag_v
 
     # Find the direction
-    axon_end = axon_p3d[-1] - soma_mid
-    if np.dot(unit_v, axon_end) < 0:
-        unit_v *= -1
+    proj = p3d.dot(pca.components_[0])
+    unit_v = np.sign(proj.mean())*pca.components_[0] 
 
     axon_seg_coor = np.zeros((4, 3))
-    # unit_v = np.asarray([0,1,0])
     axon_seg_coor[0] = soma_end
     axon_seg_coor[1] = soma_end + (unit_v * 30.)
     axon_seg_coor[2] = soma_end + (unit_v * 30.)
