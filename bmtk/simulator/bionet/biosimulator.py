@@ -304,6 +304,9 @@ class BioSimulator(Simulator):
             else:
                 io.log_exception('Can not parse input format {}'.format(sim_input.name))
 
+        if not set_recordings:
+            return sim
+            
         # Parse the "reports" section of the config and load an associated output module for each report
         sim_reports = reports.from_config(config)
         for report in sim_reports:
