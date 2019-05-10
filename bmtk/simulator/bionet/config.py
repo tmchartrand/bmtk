@@ -67,9 +67,10 @@ class Config(ConfigDict):
     def load_nrn_modules(self):
         nrn.load_neuron_modules(self.mechanisms_dir, self.templates_dir)
 
-    def build_env(self):
-        self.create_output_dir()
-        self.copy_to_output()
+    def build_env(self, setup_output=True):
+        if setup_output:
+            self.create_output_dir()
+            self.copy_to_output()
         if io.mpi_size > 1:
             # A friendly message requested by fb
             io.log_info('Running NEURON with mpi ({} cores).'.format(io.mpi_size))
