@@ -339,7 +339,7 @@ def get_axon_direction(hobj):
         soma_mid = np.asarray([h.x3d(mid_point), h.y3d(mid_point), h.z3d(mid_point)])
 
     axon_p3d_all = [] 
-    n_secs = 2
+    n_secs = 1
     for i, sec in enumerate(hobj.axonal):
         if i<n_secs:
             n3d = int(h.n3d())  # get number of n3d points in each section
