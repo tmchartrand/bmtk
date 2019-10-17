@@ -134,6 +134,8 @@ class BioCell(Cell):
                 self._segments.append(seg)
 
     def get_segments(self):
+        if not self._segments:
+            self.store_segments()
         return self._segments
 
     def set_sec_array(self):
