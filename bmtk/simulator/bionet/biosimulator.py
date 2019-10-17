@@ -80,6 +80,18 @@ class BioSimulator(Simulator):
 
         self._sim_mods = []  # list of modules.SimulatorMod's
 
+    def __del__(self):
+        print("Deleting sim")
+
+    def close(self):
+        # these may not be needed here if using nrn.reset()
+        pc.done()
+        pc.gid_clear()
+        # discard net object to close net files
+        self.net = None
+        # discard pysim circular reference
+        h.pysim = None
+
     @property
     def dt(self):
         return h.dt

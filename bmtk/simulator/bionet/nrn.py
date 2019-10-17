@@ -22,6 +22,7 @@
 #
 import sys
 import os
+import gc
 import glob
 import neuron
 from neuron import h
@@ -39,6 +40,11 @@ def quit_execution(): # quit the execution with a message
     sys.exit()
     return
 
+def reset():
+    h.pysim = None
+    pc.done()
+    clear_gids()
+    gc.collect()
 
 def clear_gids():
     pc.gid_clear()
