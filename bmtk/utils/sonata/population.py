@@ -249,9 +249,10 @@ class NodePopulation(Population):
 
         node_type_props = self.node_types_table[node_type_id]
         node_group_props = self.get_group(node_group_id)[node_group_index]
+        node_group_dynamics_params = self.get_group(node_group_id).dynamics_params(node_group_index)
         node_gid = self._gid_lookup_fnc(row_indx)
 
-        return Node(node_id, node_type_id, node_type_props, node_group_id, node_group_props, None, gid=node_gid)
+        return Node(node_id, node_type_id, node_type_props, node_group_id, node_group_props, node_group_dynamics_params, gid=node_gid)
 
     def get_rows(self, row_indicies):
         """Returns a set of all nodes based on list of row indicies.

@@ -31,6 +31,7 @@ except Exception as e:
 from bmtk.simulator.bionet.pyfunction_cache import add_cell_model, add_cell_processor
 from bmtk.simulator.bionet.io_tools import io
 from bmtk.simulator.bionet.nml_reader import NMLTree
+from bmtk.simulator.bionet.biophys_params import BiophysParams
 
 """
 Functions for loading NEURON cell objects.
@@ -48,10 +49,11 @@ def IntFire1(cell, template_name, dynamics_params):
     return hobj
 
 
-def Biophys1(cell, template_name, dynamic_params):
+def Biophys1(cell, template_name, dynamics_params):
     """Loads a biophysical NEURON hoc object using Cell-Types database objects."""
     morphology_file = cell.morphology_file
     hobj = h.Biophys1(str(morphology_file))
+    dynamics_params = BiophysParams(dynamics_params)
     #fix_axon(hobj)
     #set_params_peri(hobj, dynamic_params)
     return hobj
@@ -460,3 +462,4 @@ add_cell_processor(aibs_perisomatic_directed, overwrite=False)
 add_cell_processor(aibs_allactive_directed, overwrite=False)
 add_cell_processor(set_extracellular, overwrite=False)
 add_cell_processor(set_extracellular, 'extracellular', overwrite=False)
+

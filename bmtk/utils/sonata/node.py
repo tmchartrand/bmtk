@@ -20,7 +20,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
+from copy import deepcopy
 
 class NodeSet(object):
     # TODO: Merge NodeSet and NodePopulation
@@ -81,6 +81,7 @@ class Node(object):
         self._node_type_props = node_types_props
         self._group_id = group_id
         self._group_props = group_props
+        self._dynamics_params = dynamics_params
 
     @property
     def node_id(self):
@@ -108,7 +109,10 @@ class Node(object):
 
     @property
     def dynamics_params(self):
-        raise NotImplementedError
+        # include overridden params at top level here, let cell processing sort out
+        dp_dict = deepcopy(self._node_type_props['dynamics_params'])
+        dp_dict.update(self._dynamics_params)
+        return dp_dict
 
     def __getitem__(self, prop_key):
         if prop_key in self._group_props:

@@ -117,14 +117,18 @@ class DenseNetwork(Network):
 
             for grp_id, props in group_props.items():
                 model_grp = pop_grp.create_group('{}'.format(grp_id))
+                dp_grp = model_grp.create_group('dynamics_params')
 
                 for key, dataset in props.items():
-                    # ds_path = 'nodes/{}/{}'.format(grp_id, key)
-                    try:
-                        model_grp.create_dataset(key, data=dataset)
-                    except TypeError:
-                        str_list = [str(d) for d in dataset]
-                        hf.create_dataset(key, data=str_list)
+                    if key.startswith('genome.'):
+                        dp_grp.create_dataset(key, data=dataset)
+                    else:
+                        # ds_path = 'nodes/{}/{}'.format(grp_id, key)
+                        try:
+                            model_grp.create_dataset(key, data=dataset)
+                        except TypeError:
+                            str_list = [str(d) for d in dataset]
+                            hf.create_dataset(key, data=str_list)
 
     def nodes_iter(self, node_ids=None):
         if node_ids is not None:

@@ -57,6 +57,9 @@ class Group(object):
         # For storing dynamics_params subgroup (if it exists)
         self._has_dynamics_params = 'dynamics_params' in self._h5_group and len(self._h5_group['dynamics_params']) > 0
         self._dynamics_params_columns = []
+        if self.has_dynamics_params:
+            self._dynamics_params_columns = ColumnProperty.from_h5(self._h5_group['dynamics_params'])
+            self._dynamics_params_table = {prop.name: self._h5_group['dynamics_params'][prop.name] for prop in self._dynamics_params_columns}
 
         # An index of all the rows in parent population that map onto a member of this group
         self._parent_indicies = None  # A list of parent rows indicies
@@ -70,7 +73,7 @@ class Group(object):
 
     @property
     def has_dynamics_params(self):
-        return False
+        return self._has_dynamics_params
 
     @property
     def columns(self):
@@ -131,6 +134,12 @@ class Group(object):
         :return: A list of values for the given column name.
         """
         raise NotImplementedError
+
+    def dynamics_params(self, group_index):
+        group_props = {}
+        for cname, h5_obj in self._dynamics_params_table.items():
+            group_props[cname] = h5_obj[group_index]
+        return group_props
 
     def __len__(self):
         return self._nrows
