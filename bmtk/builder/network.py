@@ -105,7 +105,7 @@ class Network (object):
 
         # categorize properties as either a node-params (for nodes file) or node-type-property (for node_types files)
         node_params = {}
-        node_properties = {}
+        node_type_properties = {}
         for prop_name, prop_value in properties.items():
             if isinstance(prop_value, (list, np.ndarray)):  # TODO: what about pandas series
                 n_props = len(prop_value)
@@ -119,15 +119,14 @@ class Network (object):
                 node_params[prop_name] = vals
 
             else:
-                node_properties[prop_name] = prop_value
+                node_type_properties[prop_name] = prop_value
                 self._node_types_columns.add(prop_name)
-
         # If node-type-id exists, make sure there is no clash, otherwise generate a new id.
         if 'node_type_id' in node_params:
             raise Exception('There can be only one "node_type_id" per set of nodes.')
 
-        self._add_node_type(node_properties)
-        self._node_sets.append(NodeSet(N, node_params, node_properties))
+        self._add_node_type(node_type_properties)
+        self._node_sets.append(NodeSet(N, node_params, node_type_properties))
 
     def add_edges(self, source=None, target=None, connection_rule=1, connection_params=None, iterator='one_to_one',
                   **edge_type_properties):

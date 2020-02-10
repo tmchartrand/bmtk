@@ -136,6 +136,8 @@ class Group(object):
         raise NotImplementedError
 
     def dynamics_params(self, group_index):
+        if not self.has_dynamics_params:
+            return None
         group_props = {}
         for cname, h5_obj in self._dynamics_params_table.items():
             group_props[cname] = h5_obj[group_index]
