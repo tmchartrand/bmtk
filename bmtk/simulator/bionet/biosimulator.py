@@ -31,6 +31,8 @@ from bmtk.simulator.core.node_sets import NodeSet
 import bmtk.simulator.utils.simulation_reports as reports
 import bmtk.simulator.utils.simulation_inputs as inputs
 from bmtk.utils.io import spike_trains
+import pandas as pd
+import numpy as np
 
 
 pc = h.ParallelContext()    # object to access MPI methods
@@ -81,7 +83,7 @@ class BioSimulator(Simulator):
         self._sim_mods = []  # list of modules.SimulatorMod's
 
     def __del__(self):
-        print("Deleting sim")
+        io.log_info('Cleaning up simulation.')
 
     def close(self):
         # these may not be needed here if using nrn.reset()
@@ -190,11 +192,11 @@ class BioSimulator(Simulator):
             pc.spike_record(gid, tvec, gidvec)
             self._spikes[gid] = tvec
 
-    def attach_current_clamp(self, amplitude, delay, duration, gids=None):
+    def attach_current_clamps(self, amplitude, delay, duration, gids=None):
         # TODO: verify current clamp works with MPI
         # TODO: Create appropiate module
         if gids is None:
-            gids = self.gids['biophysical']
+            gids = self.biophysical_gids
         if isinstance(gids, int):
             gids = [gids]
         elif isinstance(gids, string_types):
@@ -202,11 +204,12 @@ class BioSimulator(Simulator):
         elif isinstance(gids, NodeSet):
             gids = gids.gids()
 
-
         gids = list(set(self.local_gids) & set(gids))
+        params = [amplitude, delay, duration]
         for gid in gids:
             cell = self.net.get_cell_gid(gid)
-            Ic = IClamp(amplitude, delay, duration)
+            cell_params = [param if np.isscalar(param) else param[gid] for param in params]
+            Ic = IClamp(*cell_params)
             Ic.attach_current(cell)
             self._iclamps.append(Ic)
 
@@ -224,7 +227,8 @@ class BioSimulator(Simulator):
         self.start_time = h.startsw()
         s_time = time.time()
         pc.timeout(0)
-         
+        
+        h.finitialize() # Needed to initialize mechanisms?
         pc.barrier()  # wait for all hosts to get to this point
         io.log_info('Running simulation for {:.3f} ms with the time step {:.3f} ms'.format(self.tstop, self.dt))
         io.log_info('Starting timestep: {} at t_sim: {:.3f} ms'.format(self.tstep, h.t))
@@ -303,12 +307,12 @@ class BioSimulator(Simulator):
                 network.add_spike_trains(spikes, node_set)
 
             elif sim_input.module == 'IClamp':
-                # TODO: Parse from csv file
-                amplitude = sim_input.params['amp']
-                delay = sim_input.params['delay']
-                duration = sim_input.params['duration']
-                gids = sim_input.params['node_set']
-                sim.attach_current_clamp(amplitude, delay, duration, node_set)
+                params = sim_input.params
+                gids = node_set
+                if "input_file" in sim_input.params:
+                    params = pd.read_csv(sim_input.params['input_file'], dtype={'gid':int, 'amp':float, 'delay':float, 'duration':float})
+                    gids = params['gid']
+                sim.attach_current_clamps(params['amp'], params['delay'], params['duration'], gids)
 
             elif sim_input.module == 'xstim':
                 sim.add_mod(mods.XStimMod(**sim_input.params))
