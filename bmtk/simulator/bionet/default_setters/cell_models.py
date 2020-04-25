@@ -117,6 +117,7 @@ def set_params_peri(hobj, biophys_params):
     # Set passive properties
     cm_dict = dict([(c['section'], c['cm']) for c in passive['cm']])
     for sec in hobj.all:
+        sec.v = conditions['v_init']
         sec.Ra = passive['ra']
         sec.cm = cm_dict[sec.name().split(".")[1][:4]]
         sec.insert('pas')
@@ -196,6 +197,7 @@ def set_params_allactive(hobj, params_dict):
 
     for sec in hobj.all:
         sec.insert('pas')
+        sec.v = conditions['v_init']
         # sec.insert('extracellular')
 
     if 'e_pas' in passive:
