@@ -234,15 +234,13 @@ def set_params_allactive(hobj, params_dict):
 
     for erev in conditions['erev']:
         erev_section = erev['section']
-        erev_ena = erev['ena']
-        erev_ek = erev['ek']
 
         if erev_section in section_map:
             for sec in section_map.get(erev_section, []):
                 if h.ismembrane('k_ion', sec=sec) == 1:
-                    setattr(sec, 'ek', erev_ek)
+                    setattr(sec, 'ek', erev['ek'])
                 if h.ismembrane('na_ion', sec=sec) == 1:
-                    setattr(sec, 'ena', erev_ena)
+                    setattr(sec, 'ena', erev['ena'])
         else:
             io.log_warning("Can't set erev for {}, section array doesn't exist".format(erev_section))
 
