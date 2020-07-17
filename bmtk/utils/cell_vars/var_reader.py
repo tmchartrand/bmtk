@@ -101,25 +101,27 @@ class CellVarsFile(object):
         bounds = self._gid2data_table[gid]
         return self._mapping['element_pos'][bounds[0]:bounds[1]]
 
-    def data(self, gid, var_name=VAR_UNKNOWN,time_window=None, compartments='origin'):
-        if var_name not in self.variables:
-            raise Exception('Unknown variable {}'.format(var_name))
-
+    def time_slice_valid(self, time_window=None):
         if time_window is None:
             time_slice = slice(0, self._n_steps)
         else:
             if len(time_window) != 2:
-                raise Exception('Invalid time_window, expecting tuple [being, end].')
+                raise Exception('Invalid time_window, expecting tuple [begin, end].')
 
-            window_beg = max(int((time_window[0] - self.t_start)/self.dt), 0)
-            window_end = min(int((time_window[1] - self.t_start)/self.dt), self._n_steps/self.dt)
+            window_beg = max(int((time_window[0] - self.t_start)/self.dt), 0) if time_window[0] else 0
+            window_end = min(int((time_window[1] - self.t_start)/self.dt), self._n_steps/self.dt) if time_window[1] else self._n_steps
             time_slice = slice(window_beg, window_end)
+        return time_slice
 
-        multi_compartments = True
+    def data(self, gid, var_name=VAR_UNKNOWN, time_window=None, compartments='origin'):
+        if var_name not in self.variables:
+            raise Exception('Unknown variable {}'.format(var_name))
+
+        time_slice = self.time_slice_valid(time_window)
+
         if compartments == 'origin' or self.n_compartments(gid) == 1:
             # Return the first (and possibly only) compartment for said gid
             gid_slice = self._gid2data_table[gid][0]
-            multi_compartments = False
         elif compartments == 'all':
             # Return all compartments
             gid_slice = slice(self._gid2data_table[gid][0], self._gid2data_table[gid][1])
@@ -130,5 +132,10 @@ class CellVarsFile(object):
             end = self._gid2data_table[gid][1]
             gid_slice = [i for i in range(begin, end) if self._mapping['element_id'][i] in compartment_list]
 
-        data = np.array(self._var_data[var_name][time_slice, gid_slice])
-        return data if multi_compartments else data
+        data = np.array(self._var_data[var_name][time_slice, gid_slice]).squeeze()
+        return data
+
+    def data_timeseries(self, gid, var_name=VAR_UNKNOWN, time_window=None, compartments='origin'):
+        time_slice = self.time_slice_valid(time_window)
+        data = self.data(gid, var_name=var_name, time_window=time_window, compartments=compartments)
+        return data, self.time_trace[time_slice]
